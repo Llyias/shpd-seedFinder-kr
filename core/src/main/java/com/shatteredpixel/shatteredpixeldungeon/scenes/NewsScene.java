@@ -21,317 +21,418 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
-import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.SeedFinder;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
-import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
-import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
-import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsArticle;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
-import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
-import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndTitledMessage;
-import com.watabou.noosa.BitmapText;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndTextInput;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
+import com.watabou.input.PointerEvent;
 import com.watabou.noosa.Camera;
-import com.watabou.noosa.Game;
-import com.watabou.noosa.NinePatch;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.PointerArea;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.DeviceCompat;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-
 public class NewsScene extends PixelScene {
-
-	boolean displayingNoArticles = false;
-
-	private static final int BTN_HEIGHT = 22;
-	private static final int BTN_WIDTH = 100;
 
 	@Override
 	public void create() {
 		super.create();
 
-		uiCamera.visible = false;
+		final float colWidth = 120;
+		final float fullWidth = colWidth * (landscape() ? 2 : 1);
 
 		int w = Camera.main.width;
 		int h = Camera.main.height;
 
-		int fullWidth = PixelScene.landscape() ? 202 : 100;
-		int left = (w - fullWidth)/2;
-
 		Archs archs = new Archs();
-		archs.setSize(w, h);
-		add(archs);
+		archs.setSize( w, h );
+		add( archs );
 
-		ExitButton btnExit = new ExitButton();
-		btnExit.setPos(w - btnExit.width(), 0);
-		add(btnExit);
+		//darkens the arches
+		add(new ColorBlock(w, h, 0x88000000));
 
-		RenderedTextBlock title = PixelScene.renderTextBlock(Messages.get(this, "title"), 9);
-		title.hardlight(Window.TITLE_COLOR);
-		title.setPos(
-				(w - title.width()) / 2f,
-				(20 - title.height()) / 2f
-		);
-		align(title);
-		add(title);
+		ScrollPane list = new ScrollPane( new Component() );
+		add( list );
 
-		float top = 18;
+		Component content = list.content();
+		content.clear();
 
-		displayingNoArticles = !News.articlesAvailable();
-		if (displayingNoArticles || Messages.lang() != Languages.ENGLISH) {
+		//*** Shattered Pixel Dungeon Credits ***
 
-			Component newsInfo = new NewsInfo();
-			newsInfo.setRect(left, 20, fullWidth, 0);
-			add(newsInfo);
+		/*String shpxLink = "https://ShatteredPixel.com";
+		//tracking codes, so that the website knows where this pageview came from
+		shpxLink += "?utm_source=shatteredpd";
+		shpxLink += "&utm_medium=about_page";
+		shpxLink += "&utm_campaign=ingame_link";
 
-			top = newsInfo.bottom();
-
-		}
-
-		if (!displayingNoArticles) {
-			ArrayList<NewsArticle> articles = News.articles();
-
-			float articleSpace = h - top - 2;
-			int rows = articles.size();
-			if (PixelScene.landscape()){
-				rows /= 2;
-			}
-			rows++;
-
-			while ((articleSpace) / (BTN_HEIGHT+0.5f) < rows) {
-				articles.remove(articles.size() - 1);
-				if (PixelScene.landscape()) {
-					articles.remove(articles.size() - 1);
-				}
-				rows--;
-			}
-
-			float gap = ((articleSpace) - (BTN_HEIGHT * rows)) / (float)rows;
-
-			boolean rightCol = false;
-			for (NewsArticle article : articles) {
-				StyledButton b = new ArticleButton(article);
-				b.multiline = true;
-				if (!rightCol) {
-					top += gap;
-					b.setRect( left, top, BTN_WIDTH, BTN_HEIGHT);
-				} else {
-					b.setRect( left + fullWidth - BTN_WIDTH, top, BTN_WIDTH, BTN_HEIGHT);
-				}
-				align(b);
-				add(b);
-				if (!PixelScene.landscape()) {
-					top += BTN_HEIGHT;
-				} else {
-					if (rightCol){
-						top += BTN_HEIGHT;
-					}
-					rightCol = !rightCol;
-				}
-			}
-			top += gap;
+		CreditsBlock shpx = new CreditsBlock(true, Window.SHPX_COLOR,
+				"Shattered Pixel Dungeon",
+				Icons.SHPX.get(),
+				"Developed by: _Evan Debenham_\nBased on Pixel Dungeon's open source",
+				"ShatteredPixel.com",
+				shpxLink);
+		if (landscape()){
+			shpx.setRect((w - fullWidth)/2f - 6, 10, 120, 0);
 		} else {
-			top += 20;
+			shpx.setRect((w - fullWidth)/2f, 6, 120, 0);
 		}
+		content.add(shpx);
 
-		StyledButton btnSite = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "read_more")){
-			@Override
-			protected void onClick() {
-				super.onClick();
-				String link = "https://ShatteredPixel.com";
-				//tracking codes, so that the website knows where this pageview came from
-				link += "?utm_source=shatteredpd";
-				link += "&utm_medium=news_page";
-				link += "&utm_campaign=ingame_link";
-				ShatteredPixelDungeon.platform.openURI(link);
-			}
-		};
-		btnSite.icon(Icons.get(Icons.NEWS));
-		btnSite.textColor(Window.TITLE_COLOR);
-		btnSite.setRect(left, top, fullWidth, BTN_HEIGHT);
-		add(btnSite);
+		CreditsBlock alex = new CreditsBlock(false, Window.SHPX_COLOR,
+				"Hero Art & Design:",
+				Icons.ALEKS.get(),
+				"Aleksandar Komitov",
+				"alekskomitov.com",
+				"https://www.alekskomitov.com");
+		alex.setSize(colWidth/2f, 0);
+		if (landscape()){
+			alex.setPos(shpx.right(), shpx.top() + (shpx.height() - alex.height()*2)/2f);
+		} else {
+			alex.setPos(w/2f - colWidth/2f, shpx.bottom()+5);
+		}
+		content.add(alex);
 
+		CreditsBlock charlie = new CreditsBlock(false, Window.SHPX_COLOR,
+				"Sound Effects:",
+				Icons.CELESTI.get(),
+				"Celesti",
+				"s9menine.itch.io",
+				"https://s9menine.itch.io");
+		charlie.setRect(alex.right(), alex.top(), colWidth/2f, 0);
+		content.add(charlie);
+
+		CreditsBlock kristjan = new CreditsBlock(false, Window.SHPX_COLOR,
+				"Music:",
+				Icons.KRISTJAN.get(),
+				"Kristjan Haaristo",
+				"youtube.com/user/...",
+				"https://www.youtube.com/channel/UCL1e7SgzSWbD_DQxB_5YcLA");
+		kristjan.setRect(alex.right() - colWidth/4f, alex.bottom() + 5, colWidth/2f, 0);
+		content.add(kristjan);
+
+		//*** Pixel Dungeon Credits ***
+
+		final int WATA_COLOR = 0x55AAFF;
+		CreditsBlock wata = new CreditsBlock(true, WATA_COLOR,
+				"Pixel Dungeon",
+				Icons.WATA.get(),
+				"Developed by: _Watabou_\nInspired by Brian Walker's Brogue",
+				"pixeldungeon.watabou.ru",
+				"http://pixeldungeon.watabou.ru");
+		if (landscape()){
+			wata.setRect(shpx.left(), kristjan.bottom() + 8, colWidth, 0);
+		} else {
+			wata.setRect(shpx.left(), kristjan.bottom() + 8, colWidth, 0);
+		}
+		content.add(wata);
+
+		addLine(wata.top() - 4, content);
+
+		CreditsBlock cube = new CreditsBlock(false, WATA_COLOR,
+				"Music:",
+				Icons.CUBE_CODE.get(),
+				"Cube Code",
+				null,
+				null);
+		cube.setSize(colWidth/2f, 0);
+		if (landscape()){
+			cube.setPos(wata.right() + colWidth/4f, wata.top() + (wata.height() - cube.height())/2f);
+		} else {
+			cube.setPos(alex.left() + colWidth/4f, wata.bottom()+5);
+		}
+		content.add(cube);
+
+		//*** libGDX Credits ***
+
+		final int GDX_COLOR = 0xE44D3C;
+		CreditsBlock gdx = new CreditsBlock(true,
+				GDX_COLOR,
+				"libGDX",
+				Icons.LIBGDX.get(),
+				"ShatteredPD is powered by _libGDX_!",
+				"libgdx.com",
+				"https://libgdx.com/");
+		if (landscape()){
+			gdx.setRect(wata.left(), wata.bottom() + 8, colWidth, 0);
+		} else {
+			gdx.setRect(wata.left(), cube.bottom() + 8, colWidth, 0);
+		}
+		content.add(gdx);
+
+		addLine(gdx.top() - 4, content);
+
+		CreditsBlock arcnor = new CreditsBlock(false, GDX_COLOR,
+				"Pixel Dungeon GDX:",
+				Icons.ARCNOR.get(),
+				"Edu García",
+				"twitter.com/arcnor",
+				"https://twitter.com/arcnor");
+		arcnor.setSize(colWidth/2f, 0);
+		if (landscape()){
+			arcnor.setPos(gdx.right(), gdx.top() + (gdx.height() - arcnor.height())/2f);
+		} else {
+			arcnor.setPos(alex.left(), gdx.bottom()+5);
+		}
+		content.add(arcnor);
+
+		CreditsBlock purigro = new CreditsBlock(false, GDX_COLOR,
+				"Shattered GDX Help:",
+				Icons.PURIGRO.get(),
+				"Kevin MacMartin",
+				"github.com/prurigro",
+				"https://github.com/prurigro/");
+		purigro.setRect(arcnor.right()+2, arcnor.top(), colWidth/2f, 0);
+		content.add(purigro);
+
+		//*** Transifex Credits ***
+
+		CreditsBlock transifex = new CreditsBlock(true,
+				Window.TITLE_COLOR,
+				null,
+				null,
+				"ShatteredPD is community-translated via _Transifex_! Thank you so much to all of Shattered's volunteer translators!",
+				"transifex.com/shattered-pixel/...",
+				"https://explore.transifex.com/shattered-pixel/shattered-pixel-dungeon/");
+		transifex.setRect((Camera.main.width - colWidth)/2f, purigro.bottom() + 12, colWidth, 0);
+		content.add(transifex);
+
+		addLine(transifex.top() - 4, content);
+
+		addLine(transifex.bottom() + 4, content);
+
+		//*** Freesound Credits ***
+
+		CreditsBlock freesound = new CreditsBlock(true,
+				Window.TITLE_COLOR,
+				null,
+				null,
+				"Shattered Pixel Dungeon uses the following sound samples from _freesound.org_:\n\n" +
+
+				"Creative Commons Attribution License:\n" +
+				"_SFX ATTACK SWORD 001.wav_ by _JoelAudio_\n" +
+				"_Pack: Slingshots and Longbows_ by _saturdaysoundguy_\n" +
+				"_Cracking/Crunching, A.wav_ by _InspectorJ_\n" +
+				"_Extracting a sword.mp3_ by _Taira Komori_\n" +
+				"_Pack: Uni Sound Library_ by _timmy h123_\n\n" +
+
+				"Creative Commons Zero License:\n" +
+				"_Pack: Movie Foley: Swords_ by _Black Snow_\n" +
+				"_machine gun shot 2.flac_ by _qubodup_\n" +
+				"_m240h machine gun burst 4.flac_ by _qubodup_\n" +
+				"_Pack: Onomatopoeia_ by _Adam N_\n" +
+				"_Pack: Watermelon_ by _lolamadeus_\n" +
+				"_metal chain_ by _Mediapaja2009_\n" +
+				"_Pack: Sword Clashes Pack_ by _JohnBuhr_\n" +
+				"_Pack: Metal Clangs and Pings_ by _wilhellboy_\n" +
+				"_Pack: Stabbing Stomachs & Crushing Skulls_ by _TheFilmLook_\n" +
+				"_Sheep bleating_ by _zachrau_\n" +
+				"_Lemon,Juicy,Squeeze,Fruit.wav_ by _Filipe Chagas_\n" +
+				"_Lemon,Squeeze,Squishy,Fruit.wav_ by _Filipe Chagas_",
+				"www.freesound.org",
+				"https://www.freesound.org");
+		freesound.setRect(transifex.left()-10, transifex.bottom() + 8, colWidth+20, 0);
+		content.add(freesound);
+*/
+
+		list.setRect( 0, 0, w, h );
+		list.scrollTo(0, 0);
+
+		String existingSeedtext = SPDSettings.customSeed();
+		ShatteredPixelDungeon.scene().addToFront( new WndTextInput(Messages.get(HeroSelectScene.class, "custom_seed_title"),
+			"동일한 게임 버전의 동일한 시드는 언제나 같은 던전을 생성합니다! _분석할 시드를 입력해주세요_",
+			existingSeedtext,
+			20,
+			false,
+			Messages.get(HeroSelectScene.class, "custom_seed_set"),
+			Messages.get(HeroSelectScene.class, "custom_seed_clear")){
+				@Override
+					public void onSelect(boolean positive, String text) {
+						text = DungeonSeed.formatText(text);
+						long seed = DungeonSeed.convertFromText(text);
+						if (positive && seed != -1){
+							CreditsBlock txt = new CreditsBlock(true,
+								Window.TITLE_COLOR,
+								null,
+								null,
+								new SeedFinder().logSeedItems(text,30),
+								null,
+								null);
+							txt.setRect((Camera.main.width - colWidth)/2f, /*freesound.bottom() +*/ 12, colWidth, 0);
+							content.add(txt);
+							content.setSize( fullWidth, txt.bottom()+10 );
+						} else {
+							SPDSettings.customSeed("");
+							ShatteredPixelDungeon.switchNoFade( TitleScene.class );
+						}
+					}
+			});
+			
+		ExitButton btnExit = new ExitButton();
+		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );
+		add( btnExit );
+
+		//fadeIn();
 	}
-
+	
 	@Override
 	protected void onBackPressed() {
-		ShatteredPixelDungeon.switchNoFade( TitleScene.class );
+		ShatteredPixelDungeon.switchScene(TitleScene.class);
 	}
 
-	@Override
-	public void update() {
-		if (displayingNoArticles && News.articlesAvailable()){
-			ShatteredPixelDungeon.seamlessResetScene();
-		}
-		super.update();
+	private void addLine( float y, Group content ){
+		ColorBlock line = new ColorBlock(Camera.main.width, 1, 0xFF333333);
+		line.y = y;
+		content.add(line);
 	}
 
-	private static class NewsInfo extends Component {
+	public static class CreditsBlock extends Component {
 
-		NinePatch bg;
-		RenderedTextBlock text;
-		RedButton button;
+		boolean large;
+		RenderedTextBlock title;
+		Image avatar;
+		Flare flare;
+		RenderedTextBlock body;
 
-		@Override
-		protected void createChildren() {
-			bg = Chrome.get(Chrome.Type.GREY_BUTTON_TR);
-			add(bg);
-			
-			String message = "";
+		RenderedTextBlock link;
+		ColorBlock linkUnderline;
+		PointerArea linkButton;
 
-			if (Messages.lang() != Languages.ENGLISH){
-				message += Messages.get(this, "english_warn");
+		//many elements can be null, but body is assumed to have content.
+		public CreditsBlock(boolean large, int highlight, String title, Image avatar, String body, String linkText, String linkUrl){
+			super();
+
+			this.large = large;
+
+			if (title != null) {
+				this.title = PixelScene.renderTextBlock(title, large ? 8 : 6);
+				if (highlight != -1) this.title.hardlight(highlight);
+				add(this.title);
 			}
-			
-			if (!News.articlesAvailable()){
-				if (SPDSettings.news()) {
-					if (SPDSettings.WiFi() && !Game.platform.connectedToUnmeteredNetwork()) {
-						message += "\n\n" + Messages.get(this, "metered_network");
 
-						button = new RedButton(Messages.get(this, "enable_data")) {
-							@Override
-							protected void onClick() {
-								super.onClick();
-								SPDSettings.WiFi(false);
-								News.checkForNews();
-								ShatteredPixelDungeon.seamlessResetScene();
-							}
-						};
-						add(button);
-					} else {
-						message += "\n\n" + Messages.get(this, "no_internet");
+			if (avatar != null){
+				this.avatar = avatar;
+				add(this.avatar);
+			}
+
+			if (large && highlight != -1 && this.avatar != null){
+				this.flare = new Flare( 7, 24 ).color( highlight, true ).show(this.avatar, 0);
+				this.flare.angularSpeed = 20;
+			}
+
+			this.body = PixelScene.renderTextBlock(body, 6);
+			if (highlight != -1) this.body.setHightlighting(true, highlight);
+			if (large) this.body.align(RenderedTextBlock.CENTER_ALIGN);
+			add(this.body);
+
+			if (linkText != null && linkUrl != null){
+
+				int color = 0xFFFFFFFF;
+				if (highlight != -1) color = 0xFF000000 | highlight;
+				this.linkUnderline = new ColorBlock(1, 1, color);
+				add(this.linkUnderline);
+
+				this.link = PixelScene.renderTextBlock(linkText, 6);
+				if (highlight != -1) this.link.hardlight(highlight);
+				add(this.link);
+
+				linkButton = new PointerArea(0, 0, 0, 0){
+					@Override
+					protected void onClick( PointerEvent event ) {
+						ShatteredPixelDungeon.platform.openURI( linkUrl );
 					}
-				} else {
-					message += "\n\n" + Messages.get(this, "news_disabled");
-
-					button = new RedButton(Messages.get(this, "enable_news")) {
-						@Override
-						protected void onClick() {
-							super.onClick();
-							SPDSettings.news(true);
-							News.checkForNews();
-							ShatteredPixelDungeon.seamlessResetScene();
-						}
-					};
-					add(button);
-				}
+				};
+				add(linkButton);
 			}
 
-			if (message.startsWith("\n\n")) message = message.replaceFirst("\n\n", "");
-			
-			text = PixelScene.renderTextBlock(message, 6);
-			text.hardlight(CharSprite.WARNING);
-			add(text);
-		}
-
-		@Override
-		protected void layout() {
-			bg.x = x;
-			bg.y = y;
-
-			text.maxWidth((int)width - bg.marginHor());
-			text.setPos(x + bg.marginLeft(), y + bg.marginTop()+1);
-
-			height = (text.bottom()) - y;
-
-			if (button != null){
-				height += 4;
-				button.multiline = true;
-				button.setSize(width - bg.marginHor(), 16);
-				button.setSize(width - bg.marginHor(), Math.max(button.reqHeight(), 16));
-				button.setPos(x + (width - button.width())/2, y + height);
-				height = button.bottom() - y;
-			}
-
-			height += bg.marginBottom() + 1;
-
-			bg.size(width, height);
-
-		}
-	}
-
-	private static class ArticleButton extends StyledButton {
-
-		NewsArticle article;
-
-		BitmapText date;
-
-		public ArticleButton(NewsArticle article) {
-			super(Chrome.Type.GREY_BUTTON_TR, article.title, 6);
-			this.article = article;
-
-			icon(News.parseArticleIcon(article));
-			long lastRead = SPDSettings.newsLastRead();
-			if (lastRead > 0 && article.date.getTime() > lastRead) {
-				textColor(Window.SHPX_COLOR);
-			}
-
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(article.date);
-			date = new BitmapText( News.parseArticleDate(article), pixelFont);
-			date.scale.set(PixelScene.align(0.5f));
-			date.hardlight( 0x888888 );
-			date.measure();
-			add(date);
 		}
 
 		@Override
 		protected void layout() {
 			super.layout();
 
-			icon.x = x + bg.marginLeft() + (16-icon.width())/2f;
-			PixelScene.align(icon);
-			text.setPos(x + bg.marginLeft() + 18, text.top());
+			float topY = top();
 
-			if (date != null) {
-				date.x = x + width - bg.marginRight() - date.width() + 1;
-				date.y = y + height - bg.marginBottom() - date.height() + 2.5f;
-				align(date);
+			if (title != null){
+				title.maxWidth((int)width());
+				title.setPos( x + (width() - title.width())/2f, topY);
+				topY += title.height() + (large ? 2 : 1);
 			}
-		}
 
-		@Override
-		protected void onClick() {
-			super.onClick();
-			textColor(Window.WHITE);
-			if (article.date.getTime() > SPDSettings.newsLastRead()){
-				SPDSettings.newsLastRead(article.date.getTime());
-			}
-			ShatteredPixelDungeon.scene().addToFront(new WndArticle(article));
-		}
-	}
+			if (large){
 
-	private static class WndArticle extends WndTitledMessage {
-
-		public WndArticle(NewsArticle article ) {
-			super(News.parseArticleIcon(article), article.title, article.summary);
-
-			RedButton link = new RedButton(Messages.get(NewsScene.class, "read_more")){
-				@Override
-				protected void onClick() {
-					super.onClick();
-					String link = article.URL;
-					//tracking codes, so that the website knows where this pageview came from
-					link += "?utm_source=shatteredpd";
-					link += "&utm_medium=news_page";
-					link += "&utm_campaign=ingame_link";
-					ShatteredPixelDungeon.platform.openURI(link);
+				if (avatar != null){
+					avatar.x = x + (width()-avatar.width())/2f;
+					avatar.y = topY;
+					PixelScene.align(avatar);
+					if (flare != null){
+						flare.point(avatar.center());
+					}
+					topY = avatar.y + avatar.height() + 2;
 				}
-			};
-			link.setRect(0, height + 2, width, BTN_HEIGHT);
-			add(link);
-			resize(width, (int) link.bottom());
+
+				body.maxWidth((int)width());
+				body.setPos( x + (width() - body.width())/2f, topY);
+				topY += body.height() + 2;
+
+			} else {
+
+				if (avatar != null){
+					avatar.x = x;
+					body.maxWidth((int)(width() - avatar.width - 1));
+
+					float fullAvHeight = Math.max(avatar.height(), 16);
+					if (fullAvHeight > body.height()){
+						avatar.y = topY + (fullAvHeight - avatar.height())/2f;
+						PixelScene.align(avatar);
+						body.setPos( avatar.x + avatar.width() + 1, topY + (fullAvHeight - body.height())/2f);
+						topY += fullAvHeight + 1;
+					} else {
+						avatar.y = topY + (body.height() - fullAvHeight)/2f;
+						PixelScene.align(avatar);
+						body.setPos( avatar.x + avatar.width() + 1, topY);
+						topY += body.height() + 2;
+					}
+
+				} else {
+					topY += 1;
+					body.maxWidth((int)width());
+					body.setPos( x, topY);
+					topY += body.height()+2;
+				}
+
+			}
+
+			if (link != null){
+				if (large) topY += 1;
+				link.maxWidth((int)width());
+				link.setPos( x + (width() - link.width())/2f, topY);
+				topY += link.height() + 2;
+
+				linkButton.x = link.left()-1;
+				linkButton.y = link.top()-1;
+				linkButton.width = link.width()+2;
+				linkButton.height = link.height()+2;
+
+				linkUnderline.size(link.width(), PixelScene.align(0.49f));
+				linkUnderline.x = link.left();
+				linkUnderline.y = link.bottom()+1;
+
+			}
+
+			topY -= 2;
+
+			height = Math.max(height, topY - top());
 		}
-
-
 	}
-
 }

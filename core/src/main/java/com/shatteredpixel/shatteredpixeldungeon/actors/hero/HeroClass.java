@@ -49,6 +49,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.food.CMD;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -106,6 +107,10 @@ public enum HeroClass {
 		waterskin.collect();
 
 		new ScrollOfIdentify().identify();
+
+		CMD cmd = new CMD();
+		cmd.quantity(100).collect();
+		Dungeon.quickslot.setSlot(2, cmd);
 
 		switch (this) {
 			case WARRIOR:

@@ -59,7 +59,7 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_CAMERA_FOLLOW= "camera_follow";
 	
 	public static void fullscreen( boolean value ) {
-		put( KEY_FULLSCREEN, value );
+		put( KEY_FULLSCREEN, false );
 		
 		ShatteredPixelDungeon.updateSystemUI();
 	}

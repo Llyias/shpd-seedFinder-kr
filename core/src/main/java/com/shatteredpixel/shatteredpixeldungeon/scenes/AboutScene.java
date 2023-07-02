@@ -239,7 +239,19 @@ public class AboutScene extends PixelScene {
 		freesound.setRect(transifex.left()-10, transifex.bottom() + 8, colWidth+20, 0);
 		content.add(freesound);
 
-		content.setSize( fullWidth, freesound.bottom()+10 );
+		addLine(freesound.bottom() + 4, content);
+
+		CreditsBlock Lylias = new CreditsBlock(true,
+				0x55AAFF,
+				"Lylias",
+				null,
+				"\nSomeone who made this >.<\n",
+				"GitHub",
+				"https://github.com/Llyias/shpd-seedManager-ko");
+		Lylias.setRect(freesound.left(), freesound.bottom() + 10, colWidth+20, 0);
+		content.add(Lylias);
+
+		content.setSize( fullWidth, Lylias.bottom()+10 );
 
 		list.setRect( 0, 0, w, h );
 		list.scrollTo(0, 0);
@@ -262,7 +274,7 @@ public class AboutScene extends PixelScene {
 		content.add(line);
 	}
 
-	private static class CreditsBlock extends Component {
+	public static class CreditsBlock extends Component {
 
 		boolean large;
 		RenderedTextBlock title;
@@ -275,7 +287,7 @@ public class AboutScene extends PixelScene {
 		PointerArea linkButton;
 
 		//many elements can be null, but body is assumed to have content.
-		private CreditsBlock(boolean large, int highlight, String title, Image avatar, String body, String linkText, String linkUrl){
+		public CreditsBlock(boolean large, int highlight, String title, Image avatar, String body, String linkText, String linkUrl){
 			super();
 
 			this.large = large;

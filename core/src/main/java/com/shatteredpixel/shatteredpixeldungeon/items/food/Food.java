@@ -44,9 +44,10 @@ import java.util.ArrayList;
 public class Food extends Item {
 
 	public static final float TIME_TO_EAT	= 3f;
-	
+
 	public static final String AC_EAT	= "EAT";
-	
+	public static final String AC_CMD	= "CMD";
+
 	public float energy = Hunger.HUNGRY;
 	
 	{
@@ -70,7 +71,7 @@ public class Food extends Item {
 
 		super.execute( hero, action );
 
-		if (action.equals( AC_EAT )) {
+		if (action.equals( AC_EAT )||action.equals(AC_CMD)) {
 			
 			detach( hero.belongings.backpack );
 			
@@ -81,8 +82,8 @@ public class Food extends Item {
 			hero.busy();
 			SpellSprite.show( hero, SpellSprite.FOOD );
 			Sample.INSTANCE.play( Assets.Sounds.EAT );
-			
-			hero.spend( eatingTime() );
+
+			if(action.equals( AC_EAT )) hero.spend( eatingTime() );
 
 			Talent.onFoodEaten(hero, energy, this);
 			

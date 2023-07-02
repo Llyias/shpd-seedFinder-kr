@@ -157,11 +157,11 @@ public class TitleScene extends PixelScene {
 		btnBadges.icon(Icons.get(Icons.BADGES));
 		add(btnBadges);
 
-		StyledButton btnNews = new NewsButton(GREY_TR, Messages.get(this, "news"));
+		StyledButton btnNews = new NewsButton(GREY_TR, Messages.get(this, "seedanalyze"));  // 새소식 -> 시드분석 버튼
 		btnNews.icon(Icons.get(Icons.NEWS));
 		add(btnNews);
 
-		StyledButton btnChanges = new ChangesButton(GREY_TR, Messages.get(this, "changes"));
+		StyledButton btnChanges = new SeedFindButton(GREY_TR, Messages.get(this, "seedfind"));  // 변경 -> 시드찾기 버튼
 		btnChanges.icon(Icons.get(Icons.CHANGES));
 		add(btnChanges);
 
@@ -235,7 +235,7 @@ public class TitleScene extends PixelScene {
 
 		int unreadCount = -1;
 
-		@Override
+		/*@Override
 		public void update() {
 			super.update();
 
@@ -257,12 +257,23 @@ public class TitleScene extends PixelScene {
 			if (unreadCount > 0){
 				textColor(ColorMath.interpolate( 0xFFFFFF, Window.SHPX_COLOR, 0.5f + (float)Math.sin(Game.timeTotal*5)/2f));
 			}
-		}
+		}*/
 
 		@Override
 		protected void onClick() {
 			super.onClick();
 			ShatteredPixelDungeon.switchNoFade( NewsScene.class );
+		}
+	}
+
+	private static class SeedFindButton extends StyledButton {
+		public SeedFindButton(Chrome.Type type, String label ){
+			super(type, label);
+		}
+		@Override
+		protected void onClick() {
+			super.onClick();
+			ShatteredPixelDungeon.switchNoFade( ChangesScene.class );
 		}
 	}
 
