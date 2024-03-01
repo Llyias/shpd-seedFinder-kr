@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.tweeners.Delayer;
 import com.watabou.utils.Random;
 
@@ -95,6 +96,10 @@ public class AmuletScene extends PixelScene {
 						}
 					}
 				});
+				Music.INSTANCE.playTracks(
+						new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
+						new float[]{1, 1},
+						false);
 			}
 		};
 		btnExit.icon(new ItemSprite(ItemSpriteSheet.AMULET));

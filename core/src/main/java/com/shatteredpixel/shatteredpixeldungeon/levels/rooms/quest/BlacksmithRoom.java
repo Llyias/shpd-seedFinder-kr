@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard;
+package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
@@ -28,7 +29,11 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
+import com.watabou.noosa.Tilemap;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
@@ -48,6 +53,12 @@ public class BlacksmithRoom extends StandardRoom {
 
 		Painter.fill( level, this, Terrain.WALL );
 		Painter.fill( level, this, 1, Terrain.TRAP );
+
+		for (Door door : connected.values()) {
+			door.set( Door.Type.REGULAR );
+			Painter.drawInside( level, this, door, 2, Terrain.EMPTY );
+		}
+
 		Painter.fill( level, this, 2, Terrain.EMPTY_SP );
 		
 		for (int i=0; i < 2; i++) {
@@ -63,30 +74,26 @@ public class BlacksmithRoom extends StandardRoom {
 				) ), pos );
 		}
 		
-		for (Door door : connected.values()) {
-			door.set( Door.Type.REGULAR );
-			Painter.drawInside( level, this, door, 1, Terrain.EMPTY );
-		}
-		
 		Blacksmith npc = new Blacksmith();
 		do {
 			npc.pos = level.pointToCell(random( 2 ));
 		} while (level.heaps.get( npc.pos ) != null);
 		level.mobs.add( npc );
 
-		// TODO need to add some better visuals here (even just a simple custom asset)
-		Random.pushGenerator(Dungeon.seedCurDepth()+1);
-			int entrancePos;
-			do {
-				entrancePos = level.pointToCell(random( 2 ));
-			} while (level.heaps.get( npc.pos ) != null || entrancePos == npc.pos);
-		Random.popGenerator();
+		int entrancePos;
+		do {
+			entrancePos = level.pointToCell(random( 2 ));
+		} while (level.heaps.get( npc.pos ) != null || entrancePos == npc.pos);
+
+		QuestEntrance vis = new QuestEntrance();
+		vis.pos(entrancePos, level);
+		level.customTiles.add(vis);
 
 		level.transitions.add(new LevelTransition(level,
 				entrancePos,
 				LevelTransition.Type.BRANCH_EXIT,
 				Dungeon.depth,
-				Dungeon.branch+1,
+				Dungeon.branch + 1,
 				LevelTransition.Type.BRANCH_ENTRANCE));
 		Painter.set(level, entrancePos, Terrain.EXIT);
 
@@ -96,5 +103,41 @@ public class BlacksmithRoom extends StandardRoom {
 				level.setTrap(new BurningTrap().reveal(), cell);
 			}
 		}
+	}
+
+	@Override
+	public boolean canPlaceCharacter(Point p, Level l) {
+		if (l.map[l.pointToCell(p)] == Terrain.EXIT){
+			return false;
+		} else {
+			return super.canPlaceCharacter(p, l);
+		}
+	}
+
+	public static class QuestEntrance extends CustomTilemap {
+
+		{
+			texture = Assets.Environment.CAVES_QUEST;
+
+			tileW = tileH = 1;
+		}
+
+		@Override
+		public Tilemap create() {
+			Tilemap v = super.create();
+			v.map( new int[]{0}, 1 );
+			return v;
+		}
+
+		@Override
+		public String name(int tileX, int tileY) {
+			return Messages.get(this, "name");
+		}
+
+		@Override
+		public String desc(int tileX, int tileY) {
+			return Messages.get(this, "desc");
+		}
+
 	}
 }

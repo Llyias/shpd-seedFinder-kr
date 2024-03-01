@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.input.GameAction;
@@ -365,13 +366,13 @@ public class InventoryPane extends Component {
 			b.enable(lastEnabled
 					&& !(b.item() instanceof WndBag.Placeholder)
 					&& (selector == null || selector.itemSelectable(b.item()))
-					&& (!lostInvent || b.item().keptThoughLostInvent));
+					&& (!lostInvent || b.item().keptThroughLostInventory()));
 		}
 		for (InventorySlot b : bagItems){
 			b.enable(lastEnabled
 					&& b.item() != null
 					&& (selector == null || selector.itemSelectable(b.item()))
-					&& (!lostInvent || b.item().keptThoughLostInvent));
+					&& (!lostInvent || b.item().keptThroughLostInventory()));
 		}
 		for (BagButton b : bags){
 			b.enable(lastEnabled);
@@ -455,13 +456,13 @@ public class InventoryPane extends Component {
 				b.enable(lastEnabled
 						&& !(b.item() instanceof WndBag.Placeholder)
 						&& (selector == null || selector.itemSelectable(b.item()))
-						&& (!lostInvent || b.item().keptThoughLostInvent));
+						&& (!lostInvent || b.item().keptThroughLostInventory()));
 			}
 			for (InventorySlot b : bagItems){
 				b.enable(lastEnabled
 						&& b.item() != null
 						&& (selector == null || selector.itemSelectable(b.item()))
-						&& (!lostInvent || b.item().keptThoughLostInvent));
+						&& (!lostInvent || b.item().keptThroughLostInventory()));
 			}
 			for (BagButton b : bags){
 				b.enable(lastEnabled);
@@ -532,6 +533,20 @@ public class InventoryPane extends Component {
 		}
 
 		@Override
+		protected boolean onLongClick() {
+			if (selector == null && item.defaultAction() != null) {
+				QuickSlotButton.set( item );
+				return true;
+			} else if (selector != null) {
+				GameScene.centerNextWndOnInvPane();
+				GameScene.show(new WndInfoItem(item));
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
 		protected void onMiddleClick() {
 			if (lastBag != item && !lastBag.contains(item) && !item.isEquipped(Dungeon.hero)){
 				updateInventory();
@@ -551,7 +566,7 @@ public class InventoryPane extends Component {
 
 			if (selector == null && item.defaultAction() != null){
 				item.execute(Dungeon.hero);
-				if (item.usesTargeting) {
+				if (item != null && item.usesTargeting) {
 					targetingSlot = this;
 					InventoryPane.useTargeting();
 				}
@@ -655,6 +670,7 @@ public class InventoryPane extends Component {
 		@Override
 		protected void onClick() {
 			super.onClick();
+			GameScene.cancel();
 			lastBag = bag;
 			refresh();
 		}

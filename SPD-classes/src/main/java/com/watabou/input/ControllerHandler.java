@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,8 @@ public class ControllerHandler implements ControllerListener {
 	public static boolean controllerActive = false;
 
 	//sufficiently large number so that it'll never collide with touch pointers (which start at 0)
-	public static final int CONTROLLER_POINTER_ID = 1000;
+	//19 is the max to avoid array overflow when interacting with some libGDX graphics objects
+	public static final int CONTROLLER_POINTER_ID = 19;
 
 	private static void setControllerType(Controller controller){
 		if (controller.getName().contains("Xbox")){
@@ -80,6 +81,16 @@ public class ControllerHandler implements ControllerListener {
 				failedInit = true;
 				return false;
 			}
+		}
+	}
+
+	public static boolean vibrationSupported(){
+		return isControllerConnected() && Controllers.getCurrent().canVibrate();
+	}
+
+	public static void vibrate( int millis ){
+		if (vibrationSupported()) {
+			Controllers.getCurrent().startVibration(millis, 1f);
 		}
 	}
 

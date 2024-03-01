@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,15 +76,15 @@ public class AscensionChallenge extends Buff {
 		modifiers.put(Crab.class,           8f);
 		modifiers.put(Slime.class,          8f);
 
-		modifiers.put(Skeleton.class,       6f);
-		modifiers.put(Thief.class,          6f);
-		modifiers.put(DM100.class,          5f);
+		modifiers.put(Skeleton.class,       5f);
+		modifiers.put(Thief.class,          5f);
+		modifiers.put(DM100.class,          4.5f);
 		modifiers.put(Guard.class,          4f);
 		modifiers.put(Necromancer.class,    4f);
 
-		modifiers.put(Bat.class,            3f);
-		modifiers.put(Brute.class,          2.5f);
-		modifiers.put(Shaman.class,         2.5f);
+		modifiers.put(Bat.class,            2.5f);
+		modifiers.put(Brute.class,          2.25f);
+		modifiers.put(Shaman.class,         2.25f);
 		modifiers.put(Spinner.class,        2f);
 		modifiers.put(DM200.class,          2f);
 

@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,9 @@ public class Sickle extends MeleeWeapon {
 				lvl*(tier+1);                   //scaling unchanged
 	}
 
-	public float abilityChargeUse(Hero hero, Char target) {
-		return 2*super.abilityChargeUse(hero, target);
+	@Override
+	protected int baseChargeUse(Hero hero, Char target){
+		return 2;
 	}
 
 	@Override
@@ -94,7 +95,7 @@ public class Sickle extends MeleeWeapon {
 				AttackIndicator.target(enemy);
 
 				Buff.affect(enemy, HarvestBleedTracker.class, 0).bleedFactor = bleedFactor;
-				if (hero.attack(enemy, 1, 0, Char.INFINITE_ACCURACY)){
+				if (hero.attack(enemy, 1.1f, 0, Char.INFINITE_ACCURACY)){
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				}
 
@@ -102,11 +103,6 @@ public class Sickle extends MeleeWeapon {
 				hero.spendAndNext(hero.attackDelay());
 				if (!enemy.isAlive()){
 					wep.onAbilityKill(hero, enemy);
-					Buff.prolong(hero, Sword.CleaveTracker.class, 5f);
-				} else {
-					if (hero.buff(Sword.CleaveTracker.class) != null) {
-						hero.buff(Sword.CleaveTracker.class).detach();
-					}
 				}
 				wep.afterAbilityUsed(hero);
 			}

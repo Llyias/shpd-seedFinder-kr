@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ public class Swarm extends Mob {
 				GameScene.add( clone, SPLIT_DELAY ); //we add before assigning HP due to ascension
 
 				clone.HP = (HP - damage) / 2;
-				Actor.addDelayed( new Pushing( clone, pos, clone.pos ), -1 );
+				Actor.add( new Pushing( clone, pos, clone.pos ) );
 
 				Dungeon.level.occupyCell(clone);
 				

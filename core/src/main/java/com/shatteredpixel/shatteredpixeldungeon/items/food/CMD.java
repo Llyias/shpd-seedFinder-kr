@@ -22,7 +22,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.food;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
@@ -46,10 +45,10 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class CMD extends Food {
 
@@ -210,7 +209,6 @@ public class CMD extends Food {
 			}else{
 				cls = Class.forName("com.shatteredpixel.shatteredpixeldungeon.items."+itemName);
 			}
-			Item.class.getClasses();
 			Item item = (Item) cls.getDeclaredConstructor().newInstance();
 			item.identify();
 			item.quantity(amount);
@@ -252,8 +250,11 @@ public class CMD extends Food {
 				"취소"){
 			@Override
 			public void onSelect(boolean positive, String text) {
-				if (positive && text != "") {
-					execCommand(text);
+				if (positive && !Objects.equals(text, "")) {
+
+					for(int i=0;i<text.split("\n").length;i++) {
+						execCommand(text.split("\n")[i]);
+					}
 				}else{
 					GLog.w("멍청한 자식..");
 				}

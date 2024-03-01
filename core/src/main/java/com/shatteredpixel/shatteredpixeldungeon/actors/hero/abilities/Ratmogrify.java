@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,6 +161,11 @@ public class Ratmogrify extends ArmorAbility {
 			Sample.INSTANCE.play(Assets.Sounds.PUFF);
 
 			Dungeon.level.occupyCell(rat);
+
+			//for rare cases where a buff was keeping a mob alive (e.g. gnoll brutes)
+			if (!rat.isAlive()){
+				rat.die(this);
+			}
 		}
 
 		armor.charge -= chargeUse(hero);

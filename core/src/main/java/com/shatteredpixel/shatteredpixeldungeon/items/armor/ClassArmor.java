@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,11 +31,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
-import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -101,10 +101,6 @@ abstract public class ClassArmor extends Armor {
 		switch (owner.heroClass) {
 			case WARRIOR:
 				classArmor = new WarriorArmor();
-				BrokenSeal seal = armor.checkSeal();
-				if (seal != null) {
-					classArmor.affixSeal(seal);
-				}
 				break;
 			case ROGUE:
 				classArmor = new RogueArmor();
@@ -123,7 +119,10 @@ abstract public class ClassArmor extends Armor {
 		classArmor.level(armor.trueLevel());
 		classArmor.tier = armor.tier;
 		classArmor.augment = armor.augment;
-		classArmor.inscribe( armor.glyph );
+		classArmor.inscribe(armor.glyph);
+		if (armor.seal != null) {
+			classArmor.seal = armor.seal;
+		}
 		classArmor.cursed = armor.cursed;
 		classArmor.curseInfusionBonus = armor.curseInfusionBonus;
 		classArmor.masteryPotionBonus = armor.masteryPotionBonus;
@@ -224,21 +223,45 @@ abstract public class ClassArmor extends Armor {
 								armor.detach(hero.belongings.backpack);
 								if (hero.belongings.armor == armor){
 									hero.belongings.armor = null;
+									if (hero.sprite instanceof HeroSprite) {
+										((HeroSprite) hero.sprite).updateArmor();
+									}
 								}
 								level(armor.trueLevel());
 								tier = armor.tier;
 								augment = armor.augment;
-								inscribe( armor.glyph );
 								cursed = armor.cursed;
 								curseInfusionBonus = armor.curseInfusionBonus;
 								masteryPotionBonus = armor.masteryPotionBonus;
 								if (armor.checkSeal() != null) {
+									inscribe(armor.glyph);
 									seal = armor.checkSeal();
 									if (seal.level() > 0) {
 										int newLevel = trueLevel() + 1;
 										level(newLevel);
 										Badges.validateItemLevelAquired(ClassArmor.this);
 									}
+								} else if (checkSeal() != null){
+									//automates the process of detaching the glyph manually
+									// and re-affixing it to the new armor
+									if (seal.level() > 0 && trueLevel() <= armor.trueLevel()){
+										int newLevel = trueLevel() + 1;
+										level(newLevel);
+										Badges.validateItemLevelAquired(ClassArmor.this);
+									}
+
+									//if both source and destination armor have glyphs
+									// we assume the player wants the glyph on the destination armor
+									// they can always manually detach first if they don't.
+									// otherwise we automate glyph transfer just like upgrades
+									if (armor.glyph == null && seal.canTransferGlyph()){
+										//do nothing, keep our glyph
+									} else {
+										inscribe(armor.glyph);
+										seal.setGlyph(null);
+									}
+								} else {
+									inscribe(armor.glyph);
 								}
 
 								identify();

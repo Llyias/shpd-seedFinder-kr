@@ -3,7 +3,7 @@
  * Copyright (C) 2012-2015 Oleg Dolya
  *
  * Shattered Pixel Dungeon
- * Copyright (C) 2014-2023 Evan Debenham
+ * Copyright (C) 2014-2024 Evan Debenham
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,10 +140,9 @@ public class HornOfPlenty extends Artifact {
 
 				Badges.validateFoodEaten();
 
-				int oldImage = image;
-				if (charge >= 15)       image = ItemSpriteSheet.ARTIFACT_HORN4;
-				else if (charge >= 10)  image = ItemSpriteSheet.ARTIFACT_HORN3;
-				else if (charge >= 5)   image = ItemSpriteSheet.ARTIFACT_HORN2;
+				if (charge >= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;
+				else if (charge >= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;
+				else if (charge >= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;
 				else                    image = ItemSpriteSheet.ARTIFACT_HORN1;
 
 				updateQuickslot();
@@ -174,10 +173,9 @@ public class HornOfPlenty extends Artifact {
 					partialCharge = 0;
 				}
 
-				int oldImage = image;
-				if (charge >= 15)       image = ItemSpriteSheet.ARTIFACT_HORN4;
-				else if (charge >= 10)  image = ItemSpriteSheet.ARTIFACT_HORN3;
-				else if (charge >= 5)   image = ItemSpriteSheet.ARTIFACT_HORN2;
+				if (charge >= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;
+				else if (charge >= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;
+				else if (charge >= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;
 				else                    image = ItemSpriteSheet.ARTIFACT_HORN1;
 
 				updateQuickslot();
@@ -286,7 +284,6 @@ public class HornOfPlenty extends Artifact {
 					charge++;
 					partialCharge -= 1;
 
-					int oldImage = image;
 					if (charge >= 8)        image = ItemSpriteSheet.ARTIFACT_HORN4;
 					else if (charge >= 5)   image = ItemSpriteSheet.ARTIFACT_HORN3;
 					else if (charge >= 2)   image = ItemSpriteSheet.ARTIFACT_HORN2;
