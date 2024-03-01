@@ -42,11 +42,6 @@ import com.watabou.noosa.Image;
 import com.watabou.noosa.PointerArea;
 import com.watabou.noosa.ui.Component;
 
-<<<<<<< HEAD
-=======
-import java.util.ArrayList;
-
->>>>>>> 425c90135d7d666dd1f4715f165dca91a7fb449e
 public class NewsScene extends PixelScene {
 
 	@Override
@@ -417,20 +412,11 @@ public class NewsScene extends PixelScene {
 
 			}
 
-<<<<<<< HEAD
 			if (link != null){
 				if (large) topY += 1;
 				link.maxWidth((int)width());
 				link.setPos( x + (width() - link.width())/2f, topY);
 				topY += link.height() + 2;
-=======
-			date = new BitmapText( News.parseArticleDate(article), pixelFont);
-			date.scale.set(PixelScene.align(0.5f));
-			date.hardlight( 0x888888 );
-			date.measure();
-			add(date);
-		}
->>>>>>> 425c90135d7d666dd1f4715f165dca91a7fb449e
 
 				linkButton.x = link.left()-1;
 				linkButton.y = link.top()-1;
