@@ -80,11 +80,12 @@ Mobile: 설정 > 앱 에서 강제 종료, 등
 1. 이 레포 클론(clone)
 
 ```
-git clone https://github.com/Llyias/shpd-seed-finder-ko/
+git clone https://github.com/Llyias/shpd-seedFinder-ko/
 ```
 
 2. 알아서 머지(merge)
 
+3. 알아서 빌드
 
 
 
