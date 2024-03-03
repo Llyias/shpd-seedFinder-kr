@@ -13,8 +13,8 @@ buildscript {
 allprojects {
 
     ext {
-        appName = 'SPD Seed Manager'
-        appPackageName = 'com.Lylias.spdseedmanager'
+        appName = 'SHPD Seed Finder KR'
+        appPackageName = 'com.Lylias.shpdseedfinder'
 
         appVersionCode = 768
         appVersionName = '2.3.2-a'
