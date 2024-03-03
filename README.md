@@ -1,4 +1,4 @@
-# Shattered Pixel Dungeon Seed Finder (Ko 한글판)
+# Shattered Pixel Dungeon Seed Finder (KR 한글판)
 
 녹픽던에서 특정 조건을 만족하는 시드를 찾아주는 프로그램 (예: 첫 네 층에서 글레이브 +3과 판금 갑옷).
 
