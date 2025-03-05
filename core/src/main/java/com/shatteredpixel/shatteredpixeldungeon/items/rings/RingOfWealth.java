@@ -24,6 +24,8 @@ package com.shatteredpixel.shatteredpixeldungeon.items.rings;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.CounterBuff;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
@@ -31,13 +33,16 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Honeypot;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.AlchemicalCatalyst;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.UnstableBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ExoticScroll;
-import com.shatteredpixel.shatteredpixeldungeon.items.spells.ArcaneCatalyst;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfMetamorphosis;
+import com.shatteredpixel.shatteredpixeldungeon.items.spells.UnstableSpell;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfEnchantment;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ExoticCrystals;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -47,12 +52,12 @@ import com.watabou.utils.Random;
 import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class RingOfWealth extends Ring {
 
 	{
 		icon = ItemSpriteSheet.Icons.RING_WEALTH;
+		buffClass = Wealth.class;
 	}
 
 	private float triesToDrop = Float.MIN_VALUE;
@@ -70,6 +75,11 @@ public class RingOfWealth extends Ring {
 		} else {
 			return Messages.get(this, "typical_stats", Messages.decimalFormat("#.##", 20f));
 		}
+	}
+
+	public String upgradeStat1(int level){
+		if (cursed && cursedKnown) level = Math.min(-1, level-3);
+		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.2f, level+1)-1f)) + "%";
 	}
 
 	private static final String TRIES_TO_DROP = "tries_to_drop";
@@ -102,31 +112,25 @@ public class RingOfWealth extends Ring {
 		int bonus = getBuffedBonus(target, Wealth.class);
 
 		if (bonus <= 0) return null;
-		
-		HashSet<Wealth> buffs = target.buffs(Wealth.class);
-		float triesToDrop = Float.MIN_VALUE;
-		int dropsToEquip = Integer.MIN_VALUE;
-		
-		//find the largest count (if they aren't synced yet)
-		for (Wealth w : buffs){
-			if (w.triesToDrop() > triesToDrop){
-				triesToDrop = w.triesToDrop();
-				dropsToEquip = w.dropsToRare();
-			}
+
+		CounterBuff triesToDrop = target.buff(TriesToDropTracker.class);
+		if (triesToDrop == null){
+			triesToDrop = Buff.affect(target, TriesToDropTracker.class);
+			triesToDrop.countUp( Random.NormalIntRange(0, 20) );
 		}
 
-		//reset (if needed), decrement, and store counts
-		if (triesToDrop == Float.MIN_VALUE) {
-			triesToDrop = Random.NormalIntRange(0, 20);
-			dropsToEquip = Random.NormalIntRange(5, 10);
+		CounterBuff dropsToEquip = target.buff(DropsToEquipTracker.class);
+		if (dropsToEquip == null){
+			dropsToEquip = Buff.affect(target, DropsToEquipTracker.class);
+			dropsToEquip.countUp( Random.NormalIntRange(5, 10) );
 		}
 
 		//now handle reward logic
 		ArrayList<Item> drops = new ArrayList<>();
 
-		triesToDrop -= tries;
-		while ( triesToDrop <= 0 ){
-			if (dropsToEquip <= 0){
+		triesToDrop.countDown(tries);
+		while ( triesToDrop.count() <= 0 ){
+			if (dropsToEquip.count() <= 0){
 				int equipBonus = 0;
 
 				//A second ring of wealth can be at most +1 when calculating wealth bonus for equips
@@ -145,22 +149,16 @@ public class RingOfWealth extends Ring {
 					i = genEquipmentDrop(equipBonus - 1);
 				} while (Challenges.isItemBlocked(i));
 				drops.add(i);
-				dropsToEquip = Random.NormalIntRange(5, 10);
+				dropsToEquip.countUp(Random.NormalIntRange(5, 10));
 			} else {
 				Item i;
 				do {
 					i = genConsumableDrop(bonus - 1);
 				} while (Challenges.isItemBlocked(i));
 				drops.add(i);
-				dropsToEquip--;
+				dropsToEquip.countDown(1);
 			}
-			triesToDrop += Random.NormalIntRange(0, 20);
-		}
-
-		//store values back into rings
-		for (Wealth w : buffs){
-			w.triesToDrop(triesToDrop);
-			w.dropsToRare(dropsToEquip);
+			triesToDrop.countUp( Random.NormalIntRange(0, 20) );
 		}
 		
 		return drops;
@@ -230,12 +228,20 @@ public class RingOfWealth extends Ring {
 				return i.quantity(i.quantity()*2);
 			case 1:
 				i = Generator.randomUsingDefaults(Generator.Category.POTION);
-				return Reflection.newInstance(ExoticPotion.regToExo.get(i.getClass()));
+				if (!(i instanceof ExoticPotion)) {
+					return Reflection.newInstance(ExoticPotion.regToExo.get(i.getClass()));
+				} else {
+					return Reflection.newInstance(i.getClass());
+				}
 			case 2:
 				i = Generator.randomUsingDefaults(Generator.Category.SCROLL);
-				return Reflection.newInstance(ExoticScroll.regToExo.get(i.getClass()));
+				if (!(i instanceof ExoticScroll)){
+					return Reflection.newInstance(ExoticScroll.regToExo.get(i.getClass()));
+				} else {
+					return Reflection.newInstance(i.getClass());
+				}
 			case 3:
-				return Random.Int(2) == 0 ? new ArcaneCatalyst() : new AlchemicalCatalyst();
+				return Random.Int(2) == 0 ? new UnstableBrew() : new UnstableSpell();
 			case 4:
 				return new Bomb();
 			case 5:
@@ -255,9 +261,9 @@ public class RingOfWealth extends Ring {
 			case 1:
 				return new StoneOfEnchantment();
 			case 2:
-				return new PotionOfExperience();
+				return Random.Float() < ExoticCrystals.consumableExoticChance() ? new PotionOfDivineInspiration() : new PotionOfExperience();
 			case 3:
-				return new ScrollOfTransmutation();
+				return Random.Float() < ExoticCrystals.consumableExoticChance() ? new ScrollOfMetamorphosis() : new ScrollOfTransmutation();
 		}
 	}
 
@@ -303,22 +309,17 @@ public class RingOfWealth extends Ring {
 	}
 
 	public class Wealth extends RingBuff {
-		
-		private void triesToDrop( float val ){
-			triesToDrop = val;
-		}
-		
-		private float triesToDrop(){
-			return triesToDrop;
-		}
+	}
 
-		private void dropsToRare( int val ) {
-			dropsToRare = val;
+	public static class TriesToDropTracker extends CounterBuff {
+		{
+			revivePersists = true;
 		}
+	}
 
-		private int dropsToRare(){
-			return dropsToRare;
+	public static class DropsToEquipTracker extends CounterBuff {
+		{
+			revivePersists = true;
 		}
-		
 	}
 }

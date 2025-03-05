@@ -23,6 +23,8 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
@@ -34,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
@@ -65,6 +68,12 @@ public class TimekeepersHourglass extends Artifact {
 		chargeCap = 5+level();
 
 		defaultAction = AC_ACTIVATE;
+	}
+
+	@Override
+	public void resetForTrinity(int visibleLevel) {
+		super.resetForTrinity(visibleLevel);
+		charge = visibleLevel/2 - 1; //grants 4-10 turns of time freeze
 	}
 
 	public static final String AC_ACTIVATE = "ACTIVATE";
@@ -119,6 +128,14 @@ public class TimekeepersHourglass extends Artifact {
 									Talent.onArtifactUsed(Dungeon.hero);
 									activeBuff.attachTo(Dungeon.hero);
 								} else if (index == 1) {
+
+									//This might be really good...
+									for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
+										if (Dungeon.level.heroFOV[mob.pos]) {
+											artifactProc(mob, visiblyUpgraded(), 1);
+										}
+									}
+
 									GLog.i( Messages.get(TimekeepersHourglass.class, "onfreeze") );
 									GameScene.flash(0x80FFFFFF);
 									Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
@@ -164,11 +181,14 @@ public class TimekeepersHourglass extends Artifact {
 	public void charge(Hero target, float amount) {
 		if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null){
 			partialCharge += 0.25f*amount;
-			if (partialCharge >= 1){
+			while (partialCharge >= 1){
 				partialCharge--;
 				charge++;
-				updateQuickslot();
 			}
+			if (charge >= chargeCap){
+				partialCharge = 0;
+			}
+			updateQuickslot();
 		}
 	}
 
@@ -242,7 +262,7 @@ public class TimekeepersHourglass extends Artifact {
 				chargeGain *= RingOfEnergy.artifactChargeMultiplier(target);
 				partialCharge += chargeGain;
 
-				if (partialCharge >= 1) {
+				while (partialCharge >= 1) {
 					partialCharge --;
 					charge ++;
 
@@ -320,8 +340,11 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public void fx(boolean on) {
-			if (on) target.sprite.add( CharSprite.State.INVISIBLE );
-			else if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
+			if (on) target.sprite.add( CharSprite.State.PARALYSED );
+			else {
+				if (target.paralysed == 0) target.sprite.remove( CharSprite.State.PARALYSED );
+				if (target.invisible == 0) target.sprite.remove( CharSprite.State.INVISIBLE );
+			}
 		}
 	}
 
@@ -359,30 +382,40 @@ public class TimekeepersHourglass extends Artifact {
 		}
 
 		public void triggerPresses(){
-			for (int cell : presses){
-				Trap t = Dungeon.level.traps.get(cell);
-				if (t != null){
-					t.trigger();
-				}
-				Plant p = Dungeon.level.plants.get(cell);
-				if (p != null){
-					p.trigger();
-				}
-			}
-
+			ArrayList<Integer> toTrigger = presses;
 			presses = new ArrayList<>();
+			Actor.add(new Actor() {
+				{
+					actPriority = VFX_PRIO;
+				}
+
+				@Override
+				protected boolean act() {
+					for (int cell : toTrigger){
+						Plant p = Dungeon.level.plants.get(cell);
+						if (p != null){
+							p.trigger();
+						}
+						Trap t = Dungeon.level.traps.get(cell);
+						if (t != null){
+							t.trigger();
+						}
+					}
+					Actor.remove(this);
+					return true;
+				}
+			});
 		}
 
 		public void disarmPresses(){
 			for (int cell : presses){
-				Trap t = Dungeon.level.traps.get(cell);
-				if (t != null && t.disarmedByActivation) {
-					t.disarm();
-				}
-
 				Plant p = Dungeon.level.plants.get(cell);
 				if (p != null && !(p instanceof Rotberry)) {
 					Dungeon.level.uproot(cell);
+				}
+				Trap t = Dungeon.level.traps.get(cell);
+				if (t != null && t.disarmedByActivation) {
+					t.disarm();
 				}
 			}
 
@@ -430,12 +463,12 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public String iconTextDisplay() {
-			return Integer.toString((int)turnsToCost);
+			return Integer.toString((int)(turnsToCost + 0.001f));
 		}
 
 		@Override
 		public String desc() {
-			return Messages.get(this, "desc", Messages.decimalFormat("#.##", turnsToCost));
+			return Messages.get(this, "desc", Messages.decimalFormat("#.##", Math.max(0, turnsToCost)));
 		}
 
 		private static final String PRESSES = "presses";
@@ -473,9 +506,12 @@ public class TimekeepersHourglass extends Artifact {
 
 		@Override
 		public boolean doPickUp(Hero hero, int pos) {
+			Catalog.setSeen(getClass());
+			Statistics.itemTypesDiscovered.add(getClass());
 			TimekeepersHourglass hourglass = hero.belongings.getItem( TimekeepersHourglass.class );
 			if (hourglass != null && !hourglass.cursed) {
 				hourglass.upgrade();
+				Catalog.countUses(hourglass.getClass(), 2);
 				Sample.INSTANCE.play( Assets.Sounds.DEWDROP );
 				if (hourglass.level() == hourglass.levelCap)
 					GLog.p( Messages.get(this, "maxlevel") );
