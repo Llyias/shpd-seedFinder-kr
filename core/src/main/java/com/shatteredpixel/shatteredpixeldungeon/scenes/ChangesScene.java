@@ -23,7 +23,9 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import java.lang.NumberFormatException;
 import java.util.Arrays;
+import java.util.Objects;
 
+import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.SeedFinder;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
@@ -53,6 +55,7 @@ import com.watabou.utils.DeviceCompat;
 public class ChangesScene extends PixelScene {
 
 	public static int changesSelected = 0;
+	private Thread seedThread;
 
 	public static void showChangeInfo(Image icon, String title, String... messages){
 	}
@@ -104,16 +107,45 @@ public class ChangesScene extends PixelScene {
 							content.clear();
 							list.setRect( 0, 0, w, h );
 							list.scrollTo(0, 0);
-							CreditsBlock txt = new CreditsBlock(true,
-								Window.TITLE_COLOR,
-								null,
-								null,
-								new SeedFinder().findSeed(itemList,floor),
-								null,
-								null);
-							txt.setRect((Camera.main.width - colWidth)/2f, 12, colWidth, 0);
-							content.add(txt);
-							content.setSize( fullWidth, txt.bottom()+10 );
+							int finalFloor = floor;
+							CreditsBlock alertMsg = new CreditsBlock(true,
+									Window.TITLE_COLOR,
+									"시드 탐색 중...",
+									null,
+									"\n**__절대 해당화면에서 벗어나지 마세요.__**\n(메인화면으로 나가면 게임이 강제종료될 수 있습니다)",
+									null,
+									null);
+							alertMsg.setRect((Camera.main.width - colWidth)/2f, 12, colWidth, 0);
+							content.add(alertMsg);
+							content.setSize( fullWidth, alertMsg.bottom()+10 );
+							if(!Objects.isNull(seedThread) && seedThread.isAlive()){
+								new SeedFinder().stopFindSeed();
+								seedThread.interrupt();
+							}
+							seedThread = new Thread(new Runnable() {
+								@Override
+								public void run() {
+									String resultContent = new SeedFinder().findSeed(itemList, finalFloor);
+									Gdx.app.postRunnable(new Runnable() {
+										@Override
+										public void run() {
+											if(!(ShatteredPixelDungeon.scene() instanceof ChangesScene)) return;
+											CreditsBlock txt = new CreditsBlock(true,
+													Window.TITLE_COLOR,
+													null,
+													null,
+													resultContent,
+													null,
+													null);
+											txt.setRect((Camera.main.width - colWidth)/2f, 12, colWidth, 0);
+											content.add(txt);
+											content.remove(alertMsg);
+											content.setSize( fullWidth, txt.bottom()+10 );
+										}
+									});
+								}
+							});
+							seedThread.start();
 						} else {
 							SPDSettings.customSeed("");
 							ShatteredPixelDungeon.switchNoFade( TitleScene.class );
@@ -131,6 +163,8 @@ public class ChangesScene extends PixelScene {
 	@Override
 	protected void onBackPressed() {
 		ShatteredPixelDungeon.switchScene(TitleScene.class);
+		System.out.print("back!");
+		seedThread.interrupt();
 	}
 
 	private void addLine( float y, Group content ){

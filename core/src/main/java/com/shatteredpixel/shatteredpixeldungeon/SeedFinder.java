@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.EnergyCrystal;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap.Type;
@@ -28,6 +29,8 @@ import com.shatteredpixel.shatteredpixeldungeon.items.quest.Embers;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
@@ -115,6 +118,10 @@ public class SeedFinder {
 		}
 	}
 
+	public void stopFindSeed(){
+		findingStatus = FINDING.STOP;
+	}
+
 	public String findSeed(String[] wanted, int floor) {
 		itemList = new ArrayList<>(Arrays.asList(wanted));
 
@@ -130,6 +137,7 @@ public class SeedFinder {
 				break;
 			}
 		}
+		findingStatus = FINDING.STOP;
 		return result;
 	}
 
@@ -169,6 +177,26 @@ public class SeedFinder {
 		}
 
 		return heaps;
+	}
+
+	private ArrayList<HeapItem> getTrinkets() {
+		TrinketCatalyst cata = new TrinketCatalyst();
+		int NUM_TRINKETS = TrinketCatalyst.WndTrinket.NUM_TRINKETS;
+
+		// roll new trinkets if trinkets were not already rolled
+		while (cata.rolledTrinkets.size() < NUM_TRINKETS) {
+			cata.rolledTrinkets.add((Trinket) Generator.random(Generator.Category.TRINKET));
+		}
+
+		ArrayList<HeapItem> trinkets = new ArrayList<>();
+
+		for (int i = 0; i < NUM_TRINKETS; i++) {
+			Heap h = new Heap();
+			h.type = Heap.Type.TrinketCatalyst;
+			trinkets.add(new HeapItem(cata.rolledTrinkets.get(i), h));
+		}
+
+		return trinkets;
 	}
 
 	private boolean testSeed(String seed, int floors) {
@@ -277,6 +305,26 @@ public class SeedFinder {
 		boolean[] itemsFound = new boolean[itemList.size()];
 		Arrays.fill(itemsFound, false);
 
+		ArrayList<HeapItem> trinkets = getTrinkets();
+		for (int k = 0; k < trinkets.size(); k++) {
+			for (int j = 0; j < itemList.size(); j++) {
+				String wantingItem = itemList.get(j);
+				boolean precise = wantingItem.startsWith("\"")&&wantingItem.endsWith("\"");
+				if(precise){
+					wantingItem = wantingItem.replaceAll("\"","");
+				}else{
+					wantingItem = wantingItem.replaceAll(" ", "");
+				}
+				if (!precise && trinkets.get(k).item.title().replaceAll(" ","").contains(wantingItem) ||
+				precise && trinkets.get(k).item.title().equals(wantingItem)) {
+					if (!itemsFound[j]) {
+						itemsFound[j] = true;
+						break;
+					}
+				}
+			}
+		}
+
 		for (int i = 0; i < floors; i++) {
 			Level l = Dungeon.newLevel();
 
@@ -288,9 +336,9 @@ public class SeedFinder {
 					String wantingItem = itemList.get(j);
 					boolean precise = wantingItem.startsWith("\"")&&wantingItem.endsWith("\"");
 					if(precise){
-						wantingItem = wantingItem.replaceAll(" ", "");
-					}else{
 						wantingItem = wantingItem.replaceAll("\"","");
+					}else{
+						wantingItem = wantingItem.replaceAll(" ", "");
 					}
 					if (!precise&&Ghost.Quest.armor.identify().title().toLowerCase().replaceAll(" ","").contains(wantingItem) || precise&& Ghost.Quest.armor.identify().title().toLowerCase().equals(wantingItem)) {
 						if (itemsFound[j] == false) {
@@ -377,6 +425,7 @@ public class SeedFinder {
 					}
 				}
 			}
+
 			if(areAllTrue(itemsFound)){
 				return true;
 			}
@@ -401,7 +450,8 @@ public class SeedFinder {
 
 		blacklist = Arrays.asList(Gold.class, Dewdrop.class, IronKey.class, GoldenKey.class, CrystalKey.class, EnergyCrystal.class,
 								  CorpseDust.class, Embers.class, CeremonialCandle.class, Pickaxe.class);
-
+		ArrayList<HeapItem> trinkets = getTrinkets();
+		addTextItems("[ 장신구 ]", trinkets, result);
 
 		for (int i = 0; i < floors; i++) {
 			result.append("\n_----- ").append(Long.toString(Dungeon.depth)).append("층 -----_\n\n");

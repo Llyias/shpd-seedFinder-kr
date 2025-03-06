@@ -71,7 +71,8 @@ public class Heap implements Bundlable {
 		MIMIC,
 		GOLDEN_MIMIC,
 		CRYSTAL_MIMIC,
-		STATUE
+        STATUE,
+		TrinketCatalyst
 	}
 	public Type type = Type.HEAP;
 	
@@ -392,6 +393,8 @@ public class Heap implements Bundlable {
 				return "수정 미믹";
 			case STATUE:
 				return "움직이는 석상";
+			case TrinketCatalyst:
+				return "마법의 촉매제";
 			default:
 				return peek().title();
 		}
