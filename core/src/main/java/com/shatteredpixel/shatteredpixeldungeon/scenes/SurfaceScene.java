@@ -22,7 +22,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
-import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
@@ -114,7 +113,7 @@ public class SurfaceScene extends PixelScene {
 		add( window );
 
 		Calendar cal = GregorianCalendar.getInstance();
-		boolean dayTime = cal.get(Calendar.HOUR_OF_DAY) >= 7 && cal.get(Calendar.HOUR_OF_DAY) <= 20;
+		boolean dayTime = cal.get(Calendar.HOUR_OF_DAY) >= 8 && cal.get(Calendar.HOUR_OF_DAY) <= 19;
 		
 		Sky sky = new Sky( dayTime );
 		sky.scale.set( SKY_WIDTH, SKY_HEIGHT );
@@ -265,8 +264,6 @@ public class SurfaceScene extends PixelScene {
 		gameOver.setPos( frame.x + FRAME_MARGIN_X * 2, frame.y + frame.height + 4 );
 		add( gameOver );
 		
-		Badges.validateHappyEnd();
-		
 		fadeIn();
 	}
 
@@ -287,8 +284,6 @@ public class SurfaceScene extends PixelScene {
 
 	@Override
 	public void destroy() {
-		Badges.saveGlobal();
-		
 		Camera.remove( viewport );
 		super.destroy();
 	}
@@ -418,6 +413,7 @@ public class SurfaceScene extends PixelScene {
 		
 		public Avatar( HeroClass cl ) {
 			super( Assets.Sprites.AVATARS );
+			//TODO CLERIC victory sprite
 			frame( new TextureFilm( texture, WIDTH, HEIGHT ).get( cl.ordinal() ) );
 		}
 	}

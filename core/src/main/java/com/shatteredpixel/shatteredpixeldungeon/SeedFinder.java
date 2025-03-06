@@ -270,6 +270,7 @@ public class SeedFinder {
 
 	private boolean testSeedALL(String seed, int floors) {
 		SPDSettings.customSeed(seed);
+		Dungeon.initSeed();
 		GamesInProgress.selectedClass = HeroClass.WARRIOR;
 		Dungeon.init();
 
@@ -391,8 +392,9 @@ public class SeedFinder {
 	}
 
 	public String logSeedItems(String seed, int floors) {
-		
+
 		SPDSettings.customSeed(seed);
+		Dungeon.initSeed();
 		GamesInProgress.selectedClass = HeroClass.WARRIOR;
 		Dungeon.init();
 		StringBuilder result = new StringBuilder("시드 " + DungeonSeed.convertToCode(Dungeon.seed) + " (" + Dungeon.seed + ") 의 아이템들:\n\n");

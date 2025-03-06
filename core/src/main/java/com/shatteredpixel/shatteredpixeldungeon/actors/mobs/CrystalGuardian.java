@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -117,7 +118,8 @@ public class CrystalGuardian extends Mob{
 	@Override
 	public int defenseProc(Char enemy, int damage) {
 		if (recovering){
-			sprite.showStatus(CharSprite.NEGATIVE, Integer.toString(damage));
+			//this triggers before blocking, so the dmg as block-bypassing
+			sprite.showStatusWithIcon(CharSprite.NEGATIVE, Integer.toString(damage), FloatingText.PHYS_DMG_NO_BLOCK);
 			HP = Math.max(1, HP-damage);
 			damage = -1;
 		}
@@ -138,6 +140,8 @@ public class CrystalGuardian extends Mob{
 
 			if (!recovering) {
 				recovering = true;
+				Bestiary.setSeen(getClass());
+				Bestiary.countEncounter(getClass());
 				if (sprite != null) ((CrystalGuardianSprite) sprite).crumple();
 			}
 		}

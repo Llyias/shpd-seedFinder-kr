@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
@@ -31,11 +32,10 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
+import com.watabou.utils.Random;
 
 
 public abstract class KindofMisc extends EquipableItem {
-
-	private static final float TIME_TO_EQUIP = 1f;
 
 	@Override
 	public boolean doEquip(final Hero hero) {
@@ -134,6 +134,15 @@ public abstract class KindofMisc extends EquipableItem {
 
 		} else {
 
+			// 15/25% chance
+			if (hero.heroClass != HeroClass.CLERIC && hero.hasTalent(Talent.HOLY_INTUITION)
+					&& cursed && !cursedKnown
+					&& Random.Int(20) < 1 + 2*hero.pointsInTalent(Talent.HOLY_INTUITION)){
+				cursedKnown = true;
+				GLog.p(Messages.get(this, "curse_detected"));
+				return false;
+			}
+
 			if (this instanceof Artifact){
 				if (hero.belongings.artifact == null)   hero.belongings.artifact = (Artifact) this;
 				else                                    hero.belongings.misc = (Artifact) this;
@@ -153,7 +162,7 @@ public abstract class KindofMisc extends EquipableItem {
 				GLog.n( Messages.get(this, "equip_cursed", this) );
 			}
 
-			hero.spendAndNext( TIME_TO_EQUIP );
+			hero.spendAndNext( timeToEquip(hero) );
 			return true;
 
 		}
@@ -183,9 +192,9 @@ public abstract class KindofMisc extends EquipableItem {
 
 	@Override
 	public boolean isEquipped( Hero hero ) {
-		return hero.belongings.artifact() == this
+		return hero != null && (hero.belongings.artifact() == this
 				|| hero.belongings.misc() == this
-				|| hero.belongings.ring() == this;
+				|| hero.belongings.ring() == this);
 	}
 
 }

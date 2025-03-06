@@ -29,16 +29,15 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ArmoredStatue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Camouflage;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SandalsOfNature;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Berry;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.PetrifiedSeed;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.MiningLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
@@ -80,7 +79,7 @@ public class HighGrass {
 				if (naturalism != null) {
 					if (!naturalism.isCursed()) {
 						naturalismLevel = naturalism.itemLevel() + 1;
-						naturalism.charge(1);
+						naturalism.charge();
 					} else {
 						naturalismLevel = -1;
 					}
@@ -122,32 +121,34 @@ public class HighGrass {
 			
 			if (naturalismLevel >= 0) {
 				// Seed, scales from 1/25 to 1/9
-				if (Random.Int(25 - (naturalismLevel * 4)) == 0) {
-					level.drop(Generator.random(Generator.Category.SEED), pos).sprite.drop();
+				float lootChance = 1/(25f - naturalismLevel*4f);
+
+				// absolute max drop rate is ~1/6.5 with footwear of nature, ~1/18 without
+				lootChance *= PetrifiedSeed.grassLootMultiplier();
+
+				if (Random.Float() < lootChance) {
+					if (Random.Float() < PetrifiedSeed.stoneInsteadOfSeedChance()) {
+						level.drop(Generator.randomUsingDefaults(Generator.Category.STONE), pos).sprite.drop();
+					} else {
+						level.drop(Generator.random(Generator.Category.SEED), pos).sprite.drop();
+					}
 				}
 				
 				// Dew, scales from 1/6 to 1/4
-				if (Random.Int(6 - naturalismLevel/2) == 0) {
+				lootChance = 1/(6f -naturalismLevel/2f);
+
+				//grassy levels spawn half as much dew
+				if (Dungeon.level != null && Dungeon.level.feeling == Level.Feeling.GRASS){
+					lootChance /= 2;
+				}
+
+				if (Random.Float() < lootChance) {
 					level.drop(new Dewdrop(), pos).sprite.drop();
 				}
 			}
 
-			//Camouflage
-			if (ch instanceof Hero) {
-				Hero hero = (Hero) ch;
-				if (hero.belongings.armor() != null && hero.belongings.armor().hasGlyph(Camouflage.class, hero)) {
-					Camouflage.activate(hero, hero.belongings.armor.buffedLvl());
-				}
-			} else if (ch instanceof DriedRose.GhostHero){
-				DriedRose.GhostHero ghost = (DriedRose.GhostHero) ch;
-				if (ghost.armor() != null && ghost.armor().hasGlyph(Camouflage.class, ghost)){
-					Camouflage.activate(ghost, ghost.armor().buffedLvl());
-				}
-			} else if (ch instanceof ArmoredStatue){
-				ArmoredStatue statue = (ArmoredStatue) ch;
-				if (statue.armor() != null && statue.armor().hasGlyph(Camouflage.class, statue)){
-					Camouflage.activate(statue, statue.armor().buffedLvl());
-				}
+			if (ch != null) {
+				Camouflage.activate(ch, ch.glyphLevel(Camouflage.class));
 			}
 			
 		}
