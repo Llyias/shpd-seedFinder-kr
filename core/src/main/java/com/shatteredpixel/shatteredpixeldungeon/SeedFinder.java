@@ -130,15 +130,16 @@ public class SeedFinder {
 		Options.condition = Condition.ALL;
 
 		String result="NONE";
-
-		for (int i = Random.Int(9999999); i < DungeonSeed.TOTAL_SEEDS && findingStatus == FINDING.CONTINUE ; i++) {
-			if (testSeedALL(seedDigits + i, floor)) {
-				result = logSeedItems(seedDigits + Integer.toString(i), floor);
+		int i = 0;
+		for (; i < DungeonSeed.TOTAL_SEEDS && findingStatus == FINDING.CONTINUE ; i++) {
+			long seed = DungeonSeed.randomSeed();
+			if (testSeedALL(Long.toString(seed), floor)) {
+				result = logSeedItems(Long.toString(seed), floor);
 				break;
 			}
 		}
 		findingStatus = FINDING.STOP;
-		return result;
+		return result+"\n\n[ "+i+"개 시드 탐색함 ]";
 	}
 
 	private ArrayList<Heap> getMobDrops(Level l) {
