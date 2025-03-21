@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
+import static com.shatteredpixel.shatteredpixeldungeon.Challenges.BOMBER;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
@@ -1497,8 +1499,12 @@ public class Hero extends Char {
 			break;
 		default:
 		}
-		
-		return damage;
+
+		if(Dungeon.isChallenged(BOMBER)) {
+			return 1;
+		}else{
+			return damage;
+		}
 	}
 	
 	@Override

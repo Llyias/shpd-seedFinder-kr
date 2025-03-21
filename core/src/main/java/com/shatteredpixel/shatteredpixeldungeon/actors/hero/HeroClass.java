@@ -21,6 +21,9 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
+import static com.shatteredpixel.shatteredpixeldungeon.Challenges.BOMBER;
+import static com.shatteredpixel.shatteredpixeldungeon.Challenges.PLAY_CMD;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -53,6 +56,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.CMD;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
@@ -117,9 +121,16 @@ public enum HeroClass {
 
 		new ScrollOfIdentify().identify();
 
-		CMD cmd = new CMD();
-		cmd.quantity(100).collect();
-		Dungeon.quickslot.setSlot(2, cmd);
+		if(Dungeon.isChallenged(PLAY_CMD)){
+			CMD cmd = new CMD();
+			cmd.quantity(100).collect();
+		}
+
+		if(Dungeon.isChallenged(BOMBER)) {
+			Item bomb = new Bomb().quantity(5);
+			bomb.collect();
+			Dungeon.quickslot.setSlot(2, bomb);
+		}
 
 		switch (this) {
 			case WARRIOR:
