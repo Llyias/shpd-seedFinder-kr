@@ -17,8 +17,8 @@ allprojects {
         appName = 'SHPD Seed Finder KR'
         appPackageName = 'com.Lylias.shpdseedfinder'
 
-        appVersionCode = 832
-        appVersionName = '3.0.1'
+        appVersionCode = 833
+        appVersionName = '3.0.2'
 
         appJavaCompatibility = JavaVersion.VERSION_1_8
 
